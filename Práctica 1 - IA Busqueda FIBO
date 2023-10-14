@@ -1,0 +1,101 @@
+from collections import deque
+
+def print_matrix_with_changes(matrix, changes):
+    for row in matrix:
+        print(" ".join(str(elem) if elem not in changes else "x" for elem in row))
+    print()
+
+# Movimientos permitidos
+movimientos_permitidos = ['izquierda', 'derecha', 'arriba', 'abajo']
+
+# Definir la matriz inicial
+matrix = [
+    [0, 1, 2],
+    [3, 4, 5],
+    [6, 7, 8]
+]
+
+#Explicar reglas
+print("Elije numeros entre el 0 y el 8")
+# Imprimir la matriz de ejemplo
+print("\nMatriz Inicial")
+for row in matrix:
+    print(f"{row},")
+print(" ")
+
+# Solicitar al usuario que ingrese los nodos inicial y final
+nodo_inicial = input("Ingrese el nodo inicial: ")
+while not (nodo_inicial.isdigit() and 0 <= int(nodo_inicial) <= 8):
+    print("Ingrese solo números entre 0 y 8\n")
+    nodo_inicial = input("Ingrese el nodo inicial: ")
+nodo_inicial = int(nodo_inicial)
+
+nodo_final = input("Ingrese el nodo final: ")
+while not (nodo_final.isdigit() and 0 <= int(nodo_final) <= 8):
+    print("Ingrese solo números entre 0 y 8\n")
+    nodo_final = input("Ingrese el nodo final: ")
+nodo_final = int(nodo_final)
+
+# Imprimir la matriz inicial
+print("Matriz Inicial")
+print_matrix_with_changes(matrix, [nodo_inicial])
+
+# Encontrar el camino más corto utilizando BFS
+def find_shortest_path(matrix, start, end):
+    visited = set()
+    queue = deque([(start, [start])])
+
+    while queue:
+        node, path = queue.popleft()
+        if node == end:
+            return path
+        if node not in visited:
+            visited.add(node)
+            row = node // 3
+            col = node % 3
+            moves = [
+                (0, -1, "izquierda"),  # izquierda
+                (0, 1, "derecha"),  # derecha
+                (-1, 0, "arriba"),  # arriba
+                (1, 0, "abajo")  # abajo
+            ]
+            for move in moves:
+                new_row = row + move[0]
+                new_col = col + move[1]
+                if 0 <= new_row < len(matrix) and 0 <= new_col < len(matrix[0]):
+                    new_node = new_row * 3 + new_col
+                    if new_node not in visited:
+                        queue.append((new_node, path + [new_node]))
+
+# Encontrar el camino más corto
+shortest_path = find_shortest_path(matrix, nodo_inicial, nodo_final)
+
+print("Movimientos a realizar:")
+changes = [nodo_inicial]
+for i, node in enumerate(shortest_path[1:], 1):
+    current_node = shortest_path[i]
+    previous_node = shortest_path[i - 1]
+    if current_node - previous_node == 1:
+        move = (0, 1, "derecha")
+    elif current_node - previous_node == -1:
+        move = (0, -1, "izquierda")
+    elif current_node - previous_node == 3:
+        move = (1, 0, "abajo")
+    else:
+        move = (-1, 0, "arriba")
+
+    if move[2] in movimientos_permitidos:
+        new_row = changes[-1] // 3 + move[0]
+        new_col = changes[-1] % 3 + move[1]
+        changes.append(matrix[new_row][new_col])
+        print(f"(Movimiento: {i}°, {move[2]})")
+        print(f"(Costo: {i})")
+        print_matrix_with_changes(matrix, changes)
+    else:
+        print(f"Movimiento no permitido: {move[2]}")
+
+# Imprimir los resultados finales
+final_row = shortest_path[-1] // 3
+final_col = shortest_path[-1] % 3
+print(f"Coordenadas finales: ({final_row}, {final_col}), (fila {final_row}, columna {final_col})")
+print(f"Costo total: {len(shortest_path) - 1}")
